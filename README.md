@@ -71,6 +71,7 @@ DOMAIN-SET,ruleset-easylist-china.conf,REJECT
 RULE-SET,ruleset-v2fly-ads.conf,REJECT
 RULE-SET,ruleset-v2fly-proxy.conf,PROXY
 RULE-SET,ruleset-v2fly-cn.conf,DIRECT
+RULE-SET,ruleset-asn-cn.conf,DIRECT
 ```
 
 
@@ -88,4 +89,5 @@ go run ./ -exportlists "category-ads-all,cn,geolocation-\!cn"
 - adguard
 - easylist-china
 - v2fly/domain-list-community
+- https://bgp.he.net/country/CN
 - 

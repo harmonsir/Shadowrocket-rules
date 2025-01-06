@@ -54,6 +54,7 @@ jobs:
         run: |
           python .github/scripts/setup_adguard.py
           python .github/scripts/setup_v2fly.py
+          python .github/scripts/setup_asn.py
 
       - name: Git Push
         shell: bash
