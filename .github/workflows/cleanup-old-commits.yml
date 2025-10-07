@@ -1,0 +1,71 @@
+name: Cleanup CI Commits
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 1 1,15 * *"  # 每月1号与15号的 01:30 UTC 执行
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cleanup-commit
+  cancel-in-progress: true
+
+jobs:
+  clean-history:
+    name: Clean Old Auto-Build Commits
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # 获取完整历史以便清理
+
+      - name: 🐍 Set up Python 3.13
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: 📦 Create virtualenv
+        shell: bash
+        run: |
+          python -m venv venv
+          if [ -x "venv/bin/python" ]; then
+            echo "PYTHON_EXEC=$(pwd)/venv/bin/python" >> $GITHUB_ENV
+            echo "PYTHON_VENV_BIN=$(pwd)/venv/bin" >> $GITHUB_ENV
+          else
+            echo "PYTHON_EXEC=$(pwd)/venv/Scripts/python.exe" >> $GITHUB_ENV
+            echo "PYTHON_VENV_BIN=$(pwd)/venv/Scripts" >> $GITHUB_ENV
+          fi
+
+      - name: 📚 Install Python dependencies
+        shell: bash
+        run: |
+          $PYTHON_EXEC -m pip install --upgrade pip
+          $PYTHON_EXEC -m pip install git-filter-repo
+
+      - name: 🧹 Run cleanup script
+        shell: bash
+        run: |
+          export PATH="$PYTHON_VENV_BIN:$PATH"
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          chmod +x .github/scripts/clean_old_autocommits.sh
+          bash .github/scripts/clean_old_autocommits.sh
+
+      - name: ✅ Verify cleanup result
+        shell: bash
+        run: |
+          export PATH="$PYTHON_VENV_BIN:$PATH"
+          echo "🔍 Checking for leftover ci: auto-build commits older than 3 months..."
+          THRESHOLD=$(date -d '3 months ago' +%Y-%m-%d)
+          FOUND=$(git log --pretty=format:"%ad|%s|%an" --date=short | awk -F"|" -v t="$THRESHOLD" '$1 < t && $2 == "ci: auto-build"')
+          if [[ -n "$FOUND" ]]; then
+            echo "❌ Found old auto-build commits that should have been dropped:"
+            echo "$FOUND"
+            exit 1
+          else
+            echo "✅ Cleanup successful. No old auto-build commits remain."
+          fi
