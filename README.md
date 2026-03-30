@@ -32,6 +32,15 @@
 
 ## 配置文件介绍
 
+## advance-gpt
+
+(未命中，则代理) 由 GPT-5.4 模型生成。
+
+- 缓存版
+```
+https://cdn.jsdelivr.net/gh/harmonsir/Shadowrocket-rules@main/advance-gpt.conf
+```
+
 ## default-DIRECT
 
 (未命中，则直连) 主要加入国外的域名。规则地址：
